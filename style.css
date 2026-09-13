@@ -708,6 +708,65 @@ canvas#hero-canvas {
     transform: scale(1.03);
 }
 
+/* 3D AUTO-ROTATING CLIENT CUBE - ACTIVE MOVEMENT, NO CLICK/SCROLL NEEDED */
+.client-3d-stage {
+    width: 100%;
+    height: 580px;
+    perspective: 1600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.client-3d-cube {
+    position: relative;
+    width: 320px;
+    height: 420px;
+    transform-style: preserve-3d;
+    animation: client-cube-spin 14s linear infinite;
+}
+
+.client-3d-face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 320px;
+    height: 420px;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9);
+    background: #111;
+}
+
+.client-3d-face img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%) contrast(115%);
+}
+
+.client-3d-front { transform: rotateY(0deg) translateZ(160px); }
+.client-3d-back { transform: rotateY(180deg) translateZ(160px); }
+.client-3d-right { transform: rotateY(90deg) translateZ(160px); }
+.client-3d-left { transform: rotateY(-90deg) translateZ(160px); }
+
+@keyframes client-cube-spin {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
+
+@media (max-width: 768px) {
+    .client-3d-stage { height: 420px; }
+    .client-3d-cube { width: 220px; height: 300px; }
+    .client-3d-face { width: 220px; height: 300px; }
+    .client-3d-front, .client-3d-back, .client-3d-right, .client-3d-left { transform: rotateY(var(--r, 0deg)) translateZ(110px); }
+    .client-3d-front { transform: rotateY(0deg) translateZ(110px); }
+    .client-3d-back { transform: rotateY(180deg) translateZ(110px); }
+    .client-3d-right { transform: rotateY(90deg) translateZ(110px); }
+    .client-3d-left { transform: rotateY(-90deg) translateZ(110px); }
+}
+
 .about-badge-float {
     position: absolute;
     bottom: -1.5rem;
