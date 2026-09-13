@@ -166,16 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
     autoplayLoop();
 
     // --------------------------------------------------------------------------
-    // 2. SCROLL ENGINE & HUD
+    // 2. NAVBAR ON SCROLL (page is now clean/static, no scroll-driven hero effect)
     // --------------------------------------------------------------------------
-    const scrollContainer = document.querySelector('.scroll-container');
-    const hudBar = document.getElementById('hud-bar');
-    const hudPercent = document.getElementById('hud-percent');
-    const scrollHint = document.getElementById('scroll-hint');
-    const heroHeadline = document.getElementById('hero-center-headline');
-    const box1 = document.getElementById('box1');
-    const box2 = document.getElementById('box2');
-    const box3 = document.getElementById('box3');
     const navbar = document.getElementById('site-nav');
 
     let ticking = false;
@@ -184,54 +176,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!ticking) {
             requestAnimationFrame(() => {
                 const scrollTop = window.scrollY || document.documentElement.scrollTop;
-                
+
                 // Navbar appearance on scroll
                 if (scrollTop > 80) {
                     navbar.classList.add('scrolled');
                 } else {
                     navbar.classList.remove('scrolled');
-                }
-
-                if (scrollTop > 120 && scrollHint) {
-                    scrollHint.style.opacity = '0';
-                    scrollHint.style.transition = 'opacity 0.4s ease';
-                }
-
-                // Calculate scroll fraction for the 800vh hero
-                const containerHeight = scrollContainer.offsetHeight;
-                const maxScroll = containerHeight - window.innerHeight;
-                
-                if (maxScroll > 0) {
-                    const scrollFraction = Math.max(0, Math.min(1, scrollTop / maxScroll));
-
-                    // Update HUD
-                    if (hudBar) {
-                        hudBar.style.width = `${(scrollFraction * 100).toFixed(1)}%`;
-                    }
-                    if (hudPercent) {
-                        hudPercent.textContent = `${Math.round(scrollFraction * 100)}%`;
-                    }
-
-                    // Update Text Boxes
-                    if (box1) box1.classList.toggle('active', scrollFraction >= 0.14 && scrollFraction <= 0.34);
-                    if (box2) box2.classList.toggle('active', scrollFraction >= 0.40 && scrollFraction <= 0.60);
-                    if (box3) box3.classList.toggle('active', scrollFraction >= 0.66 && scrollFraction <= 0.88);
-
-                    // Center White & Yellow Headline - smooth scroll dissolve and return
-                    if (heroHeadline) {
-                        if (scrollFraction <= 0.12) {
-                            const prog = scrollFraction / 0.10;
-                            const opacity = Math.max(0, 1 - prog);
-                            const translateY = -prog * 35;
-                            const scale = 1 - prog * 0.08;
-                            heroHeadline.style.opacity = opacity.toFixed(3);
-                            heroHeadline.style.transform = `translate(-50%, calc(-50% + ${translateY.toFixed(1)}px)) scale(${scale.toFixed(3)})`;
-                            heroHeadline.style.visibility = opacity > 0.02 ? 'visible' : 'hidden';
-                        } else {
-                            heroHeadline.style.opacity = '0';
-                            heroHeadline.style.visibility = 'hidden';
-                        }
-                    }
                 }
 
                 ticking = false;
