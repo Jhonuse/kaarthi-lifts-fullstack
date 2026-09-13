@@ -147,27 +147,16 @@ document.addEventListener('DOMContentLoaded', () => {
     resizeCanvas();
 
     // --------------------------------------------------------------------------
-    // 1B. AUTOPLAY ENGINE - OWNER TRANSFORMATION (ACTIVE MOVEMENT, NO SCROLL/CLICK NEEDED)
+    // 2. SCROLL ENGINE & HUD
     // --------------------------------------------------------------------------
-    let autoplayDirection = 1;
-    function autoplayLoop() {
-        currentFrameIndex += autoplayDirection;
-        if (currentFrameIndex >= FRAME_COUNT - 1) {
-            currentFrameIndex = FRAME_COUNT - 1;
-            autoplayDirection = -1;
-        } else if (currentFrameIndex <= 0) {
-            currentFrameIndex = 0;
-            autoplayDirection = 1;
-        }
-        currentScrollFraction = currentFrameIndex / (FRAME_COUNT - 1);
-        renderFrame(currentFrameIndex);
-        setTimeout(() => requestAnimationFrame(autoplayLoop), 40);
-    }
-    autoplayLoop();
-
-    // --------------------------------------------------------------------------
-    // 2. NAVBAR ON SCROLL (page is now clean/static, no scroll-driven hero effect)
-    // --------------------------------------------------------------------------
+    const scrollContainer = document.querySelector('.scroll-container');
+    const hudBar = document.getElementById('hud-bar');
+    const hudPercent = document.getElementById('hud-percent');
+    const scrollHint = document.getElementById('scroll-hint');
+    const heroHeadline = document.getElementById('hero-center-headline');
+    const box1 = document.getElementById('box1');
+    const box2 = document.getElementById('box2');
+    const box3 = document.getElementById('box3');
     const navbar = document.getElementById('site-nav');
 
     let ticking = false;
@@ -176,12 +165,66 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!ticking) {
             requestAnimationFrame(() => {
                 const scrollTop = window.scrollY || document.documentElement.scrollTop;
-
+                
                 // Navbar appearance on scroll
                 if (scrollTop > 80) {
                     navbar.classList.add('scrolled');
                 } else {
                     navbar.classList.remove('scrolled');
+                }
+
+                if (scrollTop > 120 && scrollHint) {
+                    scrollHint.style.opacity = '0';
+                    scrollHint.style.transition = 'opacity 0.4s ease';
+                }
+
+                // Calculate scroll fraction for the 800vh hero
+                const containerHeight = scrollContainer.offsetHeight;
+                const maxScroll = containerHeight - window.innerHeight;
+                
+                if (maxScroll > 0) {
+                    const scrollFraction = Math.max(0, Math.min(1, scrollTop / maxScroll));
+                    currentScrollFraction = scrollFraction;
+
+                    // Map scroll to frame
+                    const frameIndex = Math.min(
+                        FRAME_COUNT - 1,
+                        Math.floor(scrollFraction * FRAME_COUNT)
+                    );
+
+                    if (frameIndex !== currentFrameIndex) {
+                        currentFrameIndex = frameIndex;
+                        renderFrame(frameIndex);
+                    }
+
+                    // Update HUD
+                    if (hudBar) {
+                        hudBar.style.width = `${(scrollFraction * 100).toFixed(1)}%`;
+                    }
+                    if (hudPercent) {
+                        hudPercent.textContent = `${Math.round(scrollFraction * 100)}%`;
+                    }
+
+                    // Update Text Boxes
+                    if (box1) box1.classList.toggle('active', scrollFraction >= 0.14 && scrollFraction <= 0.34);
+                    if (box2) box2.classList.toggle('active', scrollFraction >= 0.40 && scrollFraction <= 0.60);
+                    if (box3) box3.classList.toggle('active', scrollFraction >= 0.66 && scrollFraction <= 0.88);
+
+                    // Center White & Yellow Headline - smooth scroll dissolve and return
+                    if (heroHeadline) {
+                        if (scrollFraction <= 0.12) {
+                            const prog = scrollFraction / 0.10;
+                            const opacity = Math.max(0, 1 - prog);
+                            const translateY = -prog * 35;
+                            const scale = 1 - prog * 0.08;
+                            heroHeadline.style.opacity = opacity.toFixed(3);
+                            heroHeadline.style.transform = `translate(-50%, calc(-50% + ${translateY.toFixed(1)}px)) scale(${scale.toFixed(3)})`;
+                            heroHeadline.style.visibility = opacity > 0.02 ? 'visible' : 'hidden';
+                        } else {
+                            heroHeadline.style.opacity = '0';
+                            heroHeadline.style.visibility = 'hidden';
+                        }
+                    }
                 }
 
                 ticking = false;
@@ -459,6 +502,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const contactForm = document.getElementById('contact-form');
     const formNotify = document.getElementById('form-notification');
     const whatsappDirectBtn = document.getElementById('whatsapp-direct-btn');
+
+    // Multi-step form navigation
+    const formStep1 = document.getElementById('form-step-1');
+    const formStep2 = document.getElementById('form-step-2');
+    const formNextBtn = document.getElementById('form-next-btn');
+    const formBackBtn = document.getElementById('form-back-btn');
+    const stepIndicatorText = document.getElementById('step-indicator-text');
+    if (formNextBtn && formStep1 && formStep2) {
+        formNextBtn.addEventListener('click', () => {
+            const requiredFields = formStep1.querySelectorAll('[required]');
+            for (const field of requiredFields) {
+                if (!field.checkValidity()) { field.reportValidity(); return; }
+            }
+            formStep1.classList.remove('active');
+            formStep2.classList.add('active');
+            if (stepIndicatorText) stepIndicatorText.textContent = 'Step 2 of 2 — Your Goals';
+            formStep2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
+    if (formBackBtn && formStep1 && formStep2) {
+        formBackBtn.addEventListener('click', () => {
+            formStep2.classList.remove('active');
+            formStep1.classList.add('active');
+            if (stepIndicatorText) stepIndicatorText.textContent = 'Step 1 of 2 — Your Details';
+            formStep1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
+
+    // Floating WhatsApp button
+    const floatingWaBtn = document.getElementById('floating-whatsapp-btn');
+    if (floatingWaBtn) {
+        floatingWaBtn.href = `https://wa.me/?text=${encodeURIComponent('Hi Kaarthi! I found your site and want to know more about your coaching programs.')}`;
+    }
 
     if (contactForm) {
         contactForm.addEventListener('submit', async (e) => {
