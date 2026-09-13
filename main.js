@@ -3,10 +3,6 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Populated once /stats (via socket) reports the coach's real WhatsApp number.
-    // Falls back to a blank string so wa.me still opens the app if it hasn't loaded yet.
-    let coachWhatsappNumber = '';
-
     // --------------------------------------------------------------------------
     // 1. CANVAS HERO ENGINE
     // --------------------------------------------------------------------------
@@ -151,6 +147,25 @@ document.addEventListener('DOMContentLoaded', () => {
     resizeCanvas();
 
     // --------------------------------------------------------------------------
+    // 1B. AUTOPLAY ENGINE - OWNER TRANSFORMATION (ACTIVE MOVEMENT, NO SCROLL/CLICK NEEDED)
+    // --------------------------------------------------------------------------
+    let autoplayDirection = 1;
+    function autoplayLoop() {
+        currentFrameIndex += autoplayDirection;
+        if (currentFrameIndex >= FRAME_COUNT - 1) {
+            currentFrameIndex = FRAME_COUNT - 1;
+            autoplayDirection = -1;
+        } else if (currentFrameIndex <= 0) {
+            currentFrameIndex = 0;
+            autoplayDirection = 1;
+        }
+        currentScrollFraction = currentFrameIndex / (FRAME_COUNT - 1);
+        renderFrame(currentFrameIndex);
+        setTimeout(() => requestAnimationFrame(autoplayLoop), 40);
+    }
+    autoplayLoop();
+
+    // --------------------------------------------------------------------------
     // 2. SCROLL ENGINE & HUD
     // --------------------------------------------------------------------------
     const scrollContainer = document.querySelector('.scroll-container');
@@ -188,18 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (maxScroll > 0) {
                     const scrollFraction = Math.max(0, Math.min(1, scrollTop / maxScroll));
-                    currentScrollFraction = scrollFraction;
-
-                    // Map scroll to frame
-                    const frameIndex = Math.min(
-                        FRAME_COUNT - 1,
-                        Math.floor(scrollFraction * FRAME_COUNT)
-                    );
-
-                    if (frameIndex !== currentFrameIndex) {
-                        currentFrameIndex = frameIndex;
-                        renderFrame(frameIndex);
-                    }
 
                     // Update HUD
                     if (hudBar) {
@@ -395,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updatePublicStats(stats) {
         if (!stats) return;
-        if (stats.whatsappNumber) coachWhatsappNumber = stats.whatsappNumber;
         if (ribbonBatchName) ribbonBatchName.textContent = stats.batchName;
         if (ribbonSlotsCount) ribbonSlotsCount.textContent = stats.slotsRemaining;
         if (ribbonCoachStatus) ribbonCoachStatus.textContent = stats.coachStatus;
@@ -408,11 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pricingSlotsBar && stats.totalSlots > 0) {
             const filledPercent = Math.min(100, Math.max(10, ((stats.totalSlots - stats.slotsRemaining) / stats.totalSlots) * 100));
             pricingSlotsBar.style.width = `${filledPercent}%`;
-        }
-
-        const footerWhatsappLink = document.querySelector('.social-btn[aria-label="WhatsApp"]');
-        if (footerWhatsappLink && coachWhatsappNumber) {
-            footerWhatsappLink.href = `https://wa.me/${coachWhatsappNumber}`;
         }
     }
 
@@ -596,7 +593,7 @@ Ref ID: ${lead.ref_code}
 • Key Struggles: "${struggles.substring(0, 100)}${struggles.length > 100 ? '...' : ''}"
 Can we discuss my personalized roadmap?`;
 
-                    const whatsappUrl = `https://wa.me/${coachWhatsappNumber}?text=${encodeURIComponent(waSummary)}`;
+                    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(waSummary)}`;
 
                     setTimeout(() => {
                         window.open(whatsappUrl, '_blank');
@@ -624,7 +621,7 @@ Can we discuss my personalized roadmap?`;
     if (whatsappDirectBtn) {
         whatsappDirectBtn.addEventListener('click', () => {
             const text = encodeURIComponent("Hi Kaarthi! I'm interested in training with Kaarthi Lifts. Can we connect?");
-            window.open(`https://wa.me/${coachWhatsappNumber}?text=${text}`, '_blank');
+            window.open(`https://wa.me/?text=${text}`, '_blank');
         });
     }
 
