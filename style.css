@@ -740,8 +740,15 @@ canvas#hero-canvas {
 .transform-flow-stage {
     position: relative;
     width: 100%;
+    max-width: 100%;
     height: 580px;
     perspective: 1400px;
+    overflow: visible;
+}
+
+.about-image-wrapper {
+    max-width: 100%;
+    overflow-x: clip;
 }
 
 .flow-path-svg {
@@ -828,10 +835,23 @@ canvas#hero-canvas {
     .transform-flow-stage { height: 480px; }
     .flow-card { width: 110px; height: 145px; }
     .flow-chapter { font-size: 0.58rem; }
+    .flow-node-3 { left: 50%; }
+    .flow-node-4 { left: 34%; }
 }
 
 @media (max-width: 480px) {
-    .transform-flow-stage { display: none; }
+    .transform-flow-stage { height: 380px; }
+    .flow-card { width: 82px; height: 108px; }
+    .flow-chapter { font-size: 0.5rem; letter-spacing: 0.04em; }
+    .flow-node-1 { left: 4%; }
+    .flow-node-2 { left: 38%; }
+    .flow-node-3 { left: 46%; }
+    .flow-node-4 { left: 32%; }
+    .about-badge-float {
+        position: static;
+        margin: 1.25rem auto 0;
+        width: fit-content;
+    }
 }
 
 .about-badge-float {
