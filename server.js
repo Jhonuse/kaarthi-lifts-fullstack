@@ -58,8 +58,13 @@ io.on('connection', async (socket) => {
   broadcastPresence();
 
   // Send initial real-time snapshot to the connected client
-  const stats = await dbOps.getStats();
-  socket.emit('stats:updated', stats);
+  try {
+    const stats = await dbOps.getStats();
+    socket.emit('stats:updated', stats);
+  } catch (e) {
+    console.error('Error fetching initial stats:', e.message);
+    socket.emit('stats:error', { error: 'Could not load stats right now' });
+  }
   socket.emit('presence:count', { count: activeVisitors.size });
 
   // 1. Client joins general public room
@@ -69,44 +74,59 @@ io.on('connection', async (socket) => {
 
   // 2. Admin connects to Coach Command Center
   socket.on('join_admin', async (pin) => {
-    const validPin = (await dbOps.getSetting('admin_pin')) || 'kaarthi2026';
-    if (pin === validPin) {
-      socket.join('admin_room');
-      socket.emit('admin:authenticated', { success: true });
-      // Send fresh leads and stats
-      socket.emit('admin:initial_data', {
-        leads: await dbOps.getAllLeads(),
-        stats: await dbOps.getStats(),
-        settings: await dbOps.getAllSettings(),
-        recentChats: await dbOps.getRecentChatSessions()
-      });
-    } else {
-      socket.emit('admin:authenticated', { success: false, error: 'Invalid PIN' });
+    try {
+      const validPin = (await dbOps.getSetting('admin_pin')) || 'kaarthi2026';
+      if (pin === validPin) {
+        socket.join('admin_room');
+        socket.emit('admin:authenticated', { success: true });
+        // Send fresh leads and stats
+        socket.emit('admin:initial_data', {
+          leads: await dbOps.getAllLeads(),
+          stats: await dbOps.getStats(),
+          settings: await dbOps.getAllSettings(),
+          recentChats: await dbOps.getRecentChatSessions()
+        });
+      } else {
+        socket.emit('admin:authenticated', { success: false, error: 'Invalid PIN' });
+      }
+    } catch (e) {
+      console.error('Error in join_admin:', e.message);
+      socket.emit('admin:authenticated', { success: false, error: 'Server error, try again' });
     }
   });
 
   // 3. Visitor or Coach joins a Live Chat Session Room
   socket.on('chat:join', async ({ sessionId, senderName }) => {
-    socket.join(`chat_${sessionId}`);
-    const history = await dbOps.getChatHistory(sessionId);
-    socket.emit('chat:history', history);
+    try {
+      socket.join(`chat_${sessionId}`);
+      const history = await dbOps.getChatHistory(sessionId);
+      socket.emit('chat:history', history);
+    } catch (e) {
+      console.error('Error in chat:join:', e.message);
+      socket.emit('chat:history', []);
+    }
   });
 
   // 4. Live Chat Message Transmission
   socket.on('chat:send', async ({ sessionId, sender, text, senderName }) => {
     if (!sessionId || !text) return;
-    const msg = await dbOps.saveChatMessage(sessionId, sender, text, senderName || (sender === 'coach' ? 'Coach Kaarthi' : 'Visitor'));
+    try {
+      const msg = await dbOps.saveChatMessage(sessionId, sender, text, senderName || (sender === 'coach' ? 'Coach Kaarthi' : 'Visitor'));
 
-    // Emit to everyone in this chat session room (visitor + coach)
-    io.to(`chat_${sessionId}`).emit('chat:message', msg);
+      // Emit to everyone in this chat session room (visitor + coach)
+      io.to(`chat_${sessionId}`).emit('chat:message', msg);
 
-    // If visitor sent it, also push live notification to admin room
-    if (sender === 'visitor') {
-      io.to('admin_room').emit('chat:activity', {
-        sessionId,
-        message: msg,
-        senderName: senderName || 'Prospective Athlete'
-      });
+      // If visitor sent it, also push live notification to admin room
+      if (sender === 'visitor') {
+        io.to('admin_room').emit('chat:activity', {
+          sessionId,
+          message: msg,
+          senderName: senderName || 'Prospective Athlete'
+        });
+      }
+    } catch (e) {
+      console.error('Error in chat:send:', e.message);
+      socket.emit('chat:error', { error: 'Message could not be sent' });
     }
   });
 
@@ -145,6 +165,15 @@ io.on('connection', async (socket) => {
     activeVisitors.delete(socket.id);
     broadcastPresence();
   });
+});
+
+// Global safety net: log unexpected errors instead of letting them
+// silently crash the whole server (and every connected user with it).
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
 });
 
 const PORT = process.env.PORT || 3000;
