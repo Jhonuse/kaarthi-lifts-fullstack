@@ -254,6 +254,7 @@ export const dbOps = {
     const totalSlots = parseInt((await dbOps.getSetting('total_slots')) || '15', 10);
     const batchName = (await dbOps.getSetting('batch_name')) || 'March 2026 Cohort';
     const coachStatus = (await dbOps.getSetting('coach_status')) || 'Online';
+    const whatsappNumber = (await dbOps.getSetting('whatsapp_number')) || '';
 
     return {
       totalLeads: totalLeads || 0,
@@ -262,7 +263,8 @@ export const dbOps = {
       slotsRemaining,
       totalSlots,
       batchName,
-      coachStatus
+      coachStatus,
+      whatsappNumber
     };
   }
 };
