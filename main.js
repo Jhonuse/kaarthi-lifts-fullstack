@@ -872,3 +872,77 @@ Can we discuss my personalized roadmap?`;
         return div.innerHTML;
     }
 });
+/* ==========================================================================
+   PASTE THIS at the end of main.js (or right before the final
+   DOMContentLoaded closing, if main.js wraps everything in one listener)
+   LATEST TRANSFORMATION SPOTLIGHT CARD
+   ==========================================================================
+
+   TO ADD/UPDATE A TRANSFORMATION:
+   Just edit the object below. No HTML or CSS changes needed.
+   - beforeImg / afterImg: path to images, e.g. "images/client-before.jpg"
+   - durationWeeks: shown as a badge (e.g. "16 Weeks")
+   - stats: up to 3 short stat pills, e.g. { val: "-14kg", lbl: "Body Fat" }
+*/
+
+const transformationData = {
+    name: "Vikram R.",
+    role: "Software Engineer",
+    durationWeeks: "16 Weeks",
+    beforeImg: "images/media_1789030515533.jpg",
+    afterImg: "images/beach-physique.jpg",
+    quote: "I spent 2 years in the gym without seeing real changes. Within 4 months of following the structured plan, everything finally clicked.",
+    stats: [
+        { val: "-14kg", lbl: "Body Fat" },
+        { val: "+4.5kg", lbl: "Lean Muscle" },
+        { val: "16", lbl: "Weeks" }
+    ]
+};
+
+function renderLatestTransformation(data) {
+    const wrap = document.getElementById('transformation-card-wrap');
+    if (!wrap) return;
+
+    wrap.innerHTML = `
+        <div class="transform-card">
+            <div class="transform-card-topline">
+                <span class="transform-badge"><span class="pulse-dot-gold"></span> NEWEST RESULT</span>
+                <span class="transform-duration">Program length: ${data.durationWeeks}</span>
+            </div>
+
+            <div class="transform-media-row">
+                <div class="transform-media-box">
+                    <img src="${data.beforeImg}" alt="${data.name} before transformation" loading="lazy">
+                    <span class="transform-media-label">Before</span>
+                </div>
+                <div class="transform-media-box">
+                    <img src="${data.afterImg}" alt="${data.name} after transformation" loading="lazy">
+                    <span class="transform-media-label after-label">After</span>
+                </div>
+            </div>
+
+            <div class="transform-body">
+                <div>
+                    <div class="transform-name-row">
+                        <h4>${data.name}</h4>
+                        <span>${data.role}</span>
+                    </div>
+                    <p class="transform-quote">"${data.quote}"</p>
+                    <div class="transform-trust-note">
+                        Every transformation here is a real client, verified progress photos, and an honest account of the struggle before the result &mdash; not a highlight reel.
+                    </div>
+                </div>
+                <div class="transform-stats">
+                    ${data.stats.map(s => `
+                        <div class="transform-stat-pill">
+                            <div class="val">${s.val}</div>
+                            <div class="lbl">${s.lbl}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+document.addEventListener('DOMContentLoaded', () => renderLatestTransformation(transformationData));
